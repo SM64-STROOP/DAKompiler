@@ -99,6 +99,10 @@ class Expression(Symbolic):
         if self.op == '[':
             return '{}[{}]'.format(self.args[0], self.constant)
 
+        if self.op == '-r':
+            self.op = '-'
+            self.args = self.args[::-1]
+
         if '!' in spec and self.type == basicTypes.boolean:
             sep = ' {} '.format(Expression.logicOpposite[self.op])
         elif self.op in '* / ** .'.split():
@@ -131,6 +135,7 @@ class Expression(Symbolic):
         '+' : lambda x, y: x + y,
         '*' : lambda x, y: x * y,
         '-' : lambda x, y: x - y,
+        '-r' : lambda x, y: y - x,
         '/' : lambda x, y: x / y,
         '>>': lambda x, y: x >> y,
         '<<': lambda x, y: x << y,
@@ -158,7 +163,13 @@ class Expression(Symbolic):
             if isinstance(right, Literal):
                 #two literals, completely reducible
                 return Literal(cls.opLambdas[op](left.value, right.value))
+            #swap move literal to right side
             left, right = right, left
+            if op in '< > <= >=':
+                op = {'<':'>', '>':'<', '<=':'>=', '>=':'<='}[op]
+            elif op == '-':
+                # reverse subtraction
+                op = '-r'
         #left is not a literal, right may be
 
         if op == '*' and left == right:
@@ -175,7 +186,7 @@ class Expression(Symbolic):
         # simplify multiplications by constants
         if op == '<<' and isinstance(right, Literal) and right.value < 8:   #assume real shifts are by more
             op, right = '*', Literal(2**right.value)
-        elif op in '+-' and isinstance(left, cls) and left.op == '*':
+        elif op in '+--r' and isinstance(left, cls) and left.op == '*':
             if isinstance(left, cls) and len(left.args) == 1 and left.args[0] == right:
                 return cls('*', [right], left.type, Literal(cls.opLambdas[op](left.constant.value,1)))
 
