@@ -1,3 +1,4 @@
+from __future__ import print_function
 versionCode = '1.0'
 import basicTypes
 from instruction import Register, FloatRegister

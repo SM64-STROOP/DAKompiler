@@ -1,3 +1,4 @@
+from __future__ import print_function
 import struct
 import itertools
 from collections import defaultdict
